@@ -1,8 +1,13 @@
 <template>
 	<view class="main">
-		<button @tap="startRecord">
-		</button>
-		<div class="icon-container" @mousedown="touchStartMicrophone" @touchstart="touchStartMicrophone" @mouseup="touchEndMicrophone" @touchend="touchEndMicrophone">
+		<view class="recordings">
+			<view v-for="(recording, index) in recordings" :key="index" @tap="playVoice(recording.path)">
+				{{ recording.timestamp }}
+				{{ recording.path }}
+			</view>
+		</view>
+		<div class="icon-container" @mousedown="touchStartMicrophone" @touchstart="touchStartMicrophone"
+			@mouseup="touchEndMicrophone" @touchend="touchEndMicrophone">
 			<view :class="microphoneClass">
 
 			</view>
@@ -24,6 +29,7 @@
 				showMicrophone1: false,
 				microphoneClass: "icon t-icon t-icon-Microphone",
 				microphoneStyle: "font-size: 100rpx",
+				recordings: [] // 新增一个数组用于存储录音记录
 			}
 		},
 		onLoad() {
@@ -31,6 +37,10 @@
 			recorderManager.onStop(function(res) {
 				console.log('recorder stop' + JSON.stringify(res));
 				self.voicePath = res.tempFilePath;
+				self.recordings.push({
+					path: res.tempFilePath,
+					timestamp: new Date().toLocaleString()
+				});
 			});
 		},
 		methods: {
@@ -46,20 +56,18 @@
 			},
 			startRecord() {
 				console.log('开始录音');
-
 				recorderManager.start();
 			},
 			endRecord() {
-				console.log('录音结束');
 				recorderManager.stop();
 			},
-			playVoice() {
-				console.log('播放录音' + this.voicePath);
-
-				if (this.voicePath) {
-					innerAudioContext.src = this.voicePath;
-					innerAudioContext.play();
-				}
+			playVoice(path) {
+				console.log('播放录音' + path+'path');
+				console.log(this.recordings);
+				// if (this.voicePath) {
+				innerAudioContext.src = path;
+				innerAudioContext.play();
+				// }
 			}
 		}
 	}
@@ -92,11 +100,11 @@
 		font-size: 160rpx;
 		position: relative;
 	}
-	
-	.big{
+
+	.big {
 		font-size: 220rpx;
 	}
-	
+
 	.icon-container {
 		position: absolute;
 		bottom: 0;

@@ -111,57 +111,72 @@ if (uni.restoreGlobal) {
         voicePath: "",
         showMicrophone1: false,
         microphoneClass: "icon t-icon t-icon-Microphone",
-        microphoneStyle: "font-size: 100rpx"
+        microphoneStyle: "font-size: 100rpx",
+        recordings: []
+        // 新增一个数组用于存储录音记录
       };
     },
     onLoad() {
       let self = this;
       recorderManager.onStop(function(res) {
-        formatAppLog("log", "at pages/record/record.vue:32", "recorder stop" + JSON.stringify(res));
+        formatAppLog("log", "at pages/record/record.vue:38", "recorder stop" + JSON.stringify(res));
         self.voicePath = res.tempFilePath;
+        self.recordings.push({
+          path: res.tempFilePath,
+          timestamp: (/* @__PURE__ */ new Date()).toLocaleString()
+        });
       });
     },
     methods: {
       touchStartMicrophone() {
-        formatAppLog("log", "at pages/record/record.vue:38", "start");
+        formatAppLog("log", "at pages/record/record.vue:48", "start");
         this.startRecord();
         this.microphoneClass = "icon t-icon t-icon-Microphone1 big";
       },
       touchEndMicrophone() {
-        formatAppLog("log", "at pages/record/record.vue:43", "end");
+        formatAppLog("log", "at pages/record/record.vue:53", "end");
         this.endRecord();
         this.microphoneClass = "icon t-icon t-icon-Microphone";
       },
       startRecord() {
-        formatAppLog("log", "at pages/record/record.vue:48", "开始录音");
+        formatAppLog("log", "at pages/record/record.vue:58", "开始录音");
         recorderManager.start();
       },
       endRecord() {
-        formatAppLog("log", "at pages/record/record.vue:53", "录音结束");
         recorderManager.stop();
       },
-      playVoice() {
-        formatAppLog("log", "at pages/record/record.vue:57", "播放录音" + this.voicePath);
-        if (this.voicePath) {
-          innerAudioContext.src = this.voicePath;
-          innerAudioContext.play();
-        }
+      playVoice(path) {
+        formatAppLog("log", "at pages/record/record.vue:65", "播放录音" + path + "path");
+        formatAppLog("log", "at pages/record/record.vue:66", this.recordings);
+        innerAudioContext.src = path;
+        innerAudioContext.play();
       }
     }
   };
   function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "main" }, [
-      vue.createElementVNode("button", {
-        onClick: _cache[0] || (_cache[0] = (...args) => $options.startRecord && $options.startRecord(...args))
-      }),
+      vue.createElementVNode("view", { class: "recordings" }, [
+        (vue.openBlock(true), vue.createElementBlock(
+          vue.Fragment,
+          null,
+          vue.renderList($data.recordings, (recording, index) => {
+            return vue.openBlock(), vue.createElementBlock("view", {
+              key: index,
+              onClick: ($event) => $options.playVoice(recording.path)
+            }, vue.toDisplayString(recording.timestamp) + " " + vue.toDisplayString(recording.path), 9, ["onClick"]);
+          }),
+          128
+          /* KEYED_FRAGMENT */
+        ))
+      ]),
       vue.createElementVNode(
         "div",
         {
           class: "icon-container",
-          onMousedown: _cache[1] || (_cache[1] = (...args) => $options.touchStartMicrophone && $options.touchStartMicrophone(...args)),
-          onTouchstart: _cache[2] || (_cache[2] = (...args) => $options.touchStartMicrophone && $options.touchStartMicrophone(...args)),
-          onMouseup: _cache[3] || (_cache[3] = (...args) => $options.touchEndMicrophone && $options.touchEndMicrophone(...args)),
-          onTouchend: _cache[4] || (_cache[4] = (...args) => $options.touchEndMicrophone && $options.touchEndMicrophone(...args))
+          onMousedown: _cache[0] || (_cache[0] = (...args) => $options.touchStartMicrophone && $options.touchStartMicrophone(...args)),
+          onTouchstart: _cache[1] || (_cache[1] = (...args) => $options.touchStartMicrophone && $options.touchStartMicrophone(...args)),
+          onMouseup: _cache[2] || (_cache[2] = (...args) => $options.touchEndMicrophone && $options.touchEndMicrophone(...args)),
+          onTouchend: _cache[3] || (_cache[3] = (...args) => $options.touchEndMicrophone && $options.touchEndMicrophone(...args))
         },
         [
           vue.createElementVNode(
