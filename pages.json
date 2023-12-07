@@ -2,20 +2,20 @@
 	"pages": [{
 		"path": "pages/index/index",
 		"style": {
-			"navigationBarTitleText": "uni-app"
+			"navigationBarTitleText": "登录"
 		}
 	},
 	{
 		"path" : "pages/record/record",
 		"style" : 
 		{
-			"navigationBarTitleText" : "",
+			"navigationBarTitleText" : "开始对话",
 			"enablePullDownRefresh" : false
 		}
 	}],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
+		"navigationBarTitleText": "chat",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8",
 		"app-plus": {

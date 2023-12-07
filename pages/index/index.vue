@@ -17,7 +17,7 @@
             <input class="input" placeholder="请输入密码" style="margin-left: 40rpx;" />
 
         </view>
-        <view class="button" @click="login">登录</view>
+        <view class="button" @click="login">试用</view>
     </view>
 </template>
 

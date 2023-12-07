@@ -5,7 +5,7 @@
     "iPad"
   ],
   "id": "",
-  "name": "hello-uniapp",
+  "name": "chat",
   "version": {
     "name": "1.0.0",
     "code": "100"
@@ -39,8 +39,8 @@
       "kernel": "WKWebview"
     },
     "usingComponents": true,
-    "nvueCompiler": "uni-app",
-    "nvueStyleCompiler": "uni-app",
+    "nvueCompiler": "chat",
+    "nvueStyleCompiler": "chat",
     "distribute": {
       "google": {
         "permissions": [
