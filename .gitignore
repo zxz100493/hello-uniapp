@@ -1,5 +1,5 @@
-./uni_modules
-./node_modules
+uni_modules/
+node_modules/
 .vite
 .hbuilderx
-./unpackage
+unpackage/
