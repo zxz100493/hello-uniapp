@@ -17,9 +17,11 @@ app.$mount()
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
 import App from './App.vue'
-// import './common/iconfont.js'
+// import '@/common/js/bootstrap.min.js';
+
 export function createApp() {
   const app = createSSRApp(App)
+  // app.provide("bootstrap",bootstrap);
   return {
     app
   }

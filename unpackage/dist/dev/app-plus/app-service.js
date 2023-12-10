@@ -112,14 +112,30 @@ if (uni.restoreGlobal) {
         showMicrophone1: false,
         microphoneClass: "icon t-icon t-icon-Microphone",
         microphoneStyle: "font-size: 100rpx",
-        recordings: []
+        recordings: [],
         // 新增一个数组用于存储录音记录
+        contacts: [
+          { pic: "rogers", badge: 14, name: "Steve Rogers", message: "That is America's ass 🇺🇸🍑" }
+          // ... other contacts
+        ],
+        currentContact: { pic: "stark", name: "Tony Stark", lastSeen: "Today at 12:56" },
+        messages: [
+          { time: "Today at 11:41", sender: "parker", content: "Hey, man! What's up, Mr Stark? 👋" }
+          // ... other messages
+        ],
+        newMessage: ""
       };
+    },
+    mounted() {
+      uni.$on("newMessage", this.scrollChatToBottom);
+    },
+    beforeDestroy() {
+      uni.$off("newMessage", this.scrollChatToBottom);
     },
     onLoad() {
       let self = this;
       recorderManager.onStop(function(res) {
-        formatAppLog("log", "at pages/record/record.vue:38", "recorder stop" + JSON.stringify(res));
+        formatAppLog("log", "at pages/record/record.vue:92", "recorder stop" + JSON.stringify(res));
         self.voicePath = res.tempFilePath;
         self.recordings.push({
           path: res.tempFilePath,
@@ -128,70 +144,182 @@ if (uni.restoreGlobal) {
       });
     },
     methods: {
+      scrollChatToBottom() {
+        const chat = this.$refs.chatRef;
+        chat.scrollTop = chat.scrollHeight - chat.clientHeight;
+      },
       touchStartMicrophone() {
-        formatAppLog("log", "at pages/record/record.vue:48", "start");
+        formatAppLog("log", "at pages/record/record.vue:109", "start");
         this.startRecord();
         this.microphoneClass = "icon t-icon t-icon-Microphone1 big";
       },
       touchEndMicrophone() {
-        formatAppLog("log", "at pages/record/record.vue:53", "end");
+        formatAppLog("log", "at pages/record/record.vue:114", "end");
         this.endRecord();
         this.microphoneClass = "icon t-icon t-icon-Microphone";
       },
       startRecord() {
-        formatAppLog("log", "at pages/record/record.vue:58", "开始录音");
+        formatAppLog("log", "at pages/record/record.vue:119", "开始录音");
         recorderManager.start();
       },
       endRecord() {
         recorderManager.stop();
       },
       playVoice(path) {
-        formatAppLog("log", "at pages/record/record.vue:65", "播放录音" + path + "path");
-        formatAppLog("log", "at pages/record/record.vue:66", this.recordings);
+        formatAppLog("log", "at pages/record/record.vue:126", "播放录音" + path + "path");
+        formatAppLog("log", "at pages/record/record.vue:127", this.recordings);
         innerAudioContext.src = path;
         innerAudioContext.play();
       }
     }
   };
   function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("view", { class: "main" }, [
-      vue.createElementVNode("view", { class: "recordings" }, [
-        (vue.openBlock(true), vue.createElementBlock(
-          vue.Fragment,
-          null,
-          vue.renderList($data.recordings, (recording, index) => {
-            return vue.openBlock(), vue.createElementBlock("view", {
-              key: index,
-              onClick: ($event) => $options.playVoice(recording.path)
-            }, vue.toDisplayString(recording.timestamp) + " " + vue.toDisplayString(recording.path), 9, ["onClick"]);
-          }),
-          128
-          /* KEYED_FRAGMENT */
-        ))
-      ]),
-      vue.createElementVNode(
-        "div",
-        {
-          class: "icon-container",
-          onMousedown: _cache[0] || (_cache[0] = (...args) => $options.touchStartMicrophone && $options.touchStartMicrophone(...args)),
-          onTouchstart: _cache[1] || (_cache[1] = (...args) => $options.touchStartMicrophone && $options.touchStartMicrophone(...args)),
-          onMouseup: _cache[2] || (_cache[2] = (...args) => $options.touchEndMicrophone && $options.touchEndMicrophone(...args)),
-          onTouchend: _cache[3] || (_cache[3] = (...args) => $options.touchEndMicrophone && $options.touchEndMicrophone(...args))
-        },
-        [
+    return vue.openBlock(), vue.createElementBlock("view", null, [
+      vue.createCommentVNode(" Contacts Section "),
+      vue.createElementVNode("view", { class: "center" }, [
+        vue.createElementVNode("view", { class: "contacts" }, [
+          vue.createElementVNode("text", { class: "fas fa-bars fa-2x" }),
+          vue.createElementVNode("text", { class: "contacts-title" }, "Contacts"),
+          vue.createCommentVNode(" Contacts List "),
+          (vue.openBlock(true), vue.createElementBlock(
+            vue.Fragment,
+            null,
+            vue.renderList($data.contacts, (contact, index) => {
+              return vue.openBlock(), vue.createElementBlock("view", {
+                key: index,
+                class: "contact"
+              }, [
+                vue.createElementVNode(
+                  "view",
+                  {
+                    class: vue.normalizeClass(["pic", contact.pic])
+                  },
+                  null,
+                  2
+                  /* CLASS */
+                ),
+                vue.createElementVNode(
+                  "view",
+                  { class: "badge" },
+                  vue.toDisplayString(contact.badge),
+                  1
+                  /* TEXT */
+                ),
+                vue.createElementVNode(
+                  "view",
+                  { class: "name" },
+                  vue.toDisplayString(contact.name),
+                  1
+                  /* TEXT */
+                ),
+                vue.createElementVNode(
+                  "view",
+                  { class: "message" },
+                  vue.toDisplayString(contact.message),
+                  1
+                  /* TEXT */
+                )
+              ]);
+            }),
+            128
+            /* KEYED_FRAGMENT */
+          ))
+        ]),
+        vue.createCommentVNode(" Chat Section "),
+        vue.createElementVNode("view", { class: "chat" }, [
+          vue.createCommentVNode(" Chat Header "),
+          vue.createElementVNode("view", { class: "contact bar" }, [
+            vue.createElementVNode(
+              "view",
+              {
+                class: vue.normalizeClass(["pic", $data.currentContact.pic])
+              },
+              null,
+              2
+              /* CLASS */
+            ),
+            vue.createElementVNode(
+              "view",
+              { class: "name" },
+              vue.toDisplayString($data.currentContact.name),
+              1
+              /* TEXT */
+            ),
+            vue.createElementVNode(
+              "view",
+              { class: "seen" },
+              vue.toDisplayString($data.currentContact.lastSeen),
+              1
+              /* TEXT */
+            )
+          ]),
+          vue.createCommentVNode(" Messages Container "),
           vue.createElementVNode(
             "view",
             {
-              class: vue.normalizeClass($data.microphoneClass)
+              class: "messages",
+              id: "chat",
+              ref: "chatRef"
             },
-            null,
-            2
-            /* CLASS */
-          )
-        ],
-        32
-        /* HYDRATE_EVENTS */
-      )
+            [
+              vue.createCommentVNode(" Messages "),
+              (vue.openBlock(true), vue.createElementBlock(
+                vue.Fragment,
+                null,
+                vue.renderList($data.messages, (message, index) => {
+                  return vue.openBlock(), vue.createElementBlock("view", { key: index }, [
+                    vue.createElementVNode(
+                      "view",
+                      { class: "time" },
+                      vue.toDisplayString(message.time),
+                      1
+                      /* TEXT */
+                    ),
+                    vue.createElementVNode(
+                      "view",
+                      {
+                        class: vue.normalizeClass(["message", message.sender])
+                      },
+                      vue.toDisplayString(message.content),
+                      3
+                      /* TEXT, CLASS */
+                    )
+                  ]);
+                }),
+                128
+                /* KEYED_FRAGMENT */
+              )),
+              vue.createCommentVNode(" Typing Indicator "),
+              vue.createElementVNode("view", { class: "message stark" }, [
+                vue.createElementVNode("view", { class: "typing typing-1" }),
+                vue.createElementVNode("view", { class: "typing typing-2" }),
+                vue.createElementVNode("view", { class: "typing typing-3" })
+              ])
+            ],
+            512
+            /* NEED_PATCH */
+          ),
+          vue.createCommentVNode(" Input Area "),
+          vue.createElementVNode("view", { class: "input" }, [
+            vue.createElementVNode("text", { class: "fas fa-camera" }),
+            vue.createElementVNode("text", { class: "far fa-laugh-beam" }),
+            vue.withDirectives(vue.createElementVNode(
+              "input",
+              {
+                placeholder: "Type your message here!",
+                type: "text",
+                "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $data.newMessage = $event)
+              },
+              null,
+              512
+              /* NEED_PATCH */
+            ), [
+              [vue.vModelText, $data.newMessage]
+            ]),
+            vue.createElementVNode("text", { class: "fas fa-microphone" })
+          ])
+        ])
+      ])
     ]);
   }
   const PagesRecordRecord = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render], ["__file", "E:/uniapp/hello-uniapp/pages/record/record.vue"]]);
