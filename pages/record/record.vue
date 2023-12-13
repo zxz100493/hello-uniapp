@@ -23,7 +23,7 @@
 				</view>
 
 				<!-- Messages Container -->
-				<view class="messages" id="chat" ref="chatRef">
+				<view class="messages chatdoom" id="chat" ref="chatRef">
 					<!-- Messages -->
 					<view v-for="(message, index) in messages" :key="index">
 						<view class="time">{{ message.time }}</view>
@@ -57,7 +57,13 @@
 	const innerAudioContext = uni.createInnerAudioContext();
 
 	innerAudioContext.autoplay = true;
-
+const handleClickItem = (item: any, index: number) => {
+  //...代码
+  //实时滚动
+  setTimeout(() => {
+    scrollToBottom()
+  }, 200)
+}
 	export default {
 		data() {
 			return {
@@ -92,17 +98,42 @@
 			}
 		},
 		mounted() {
+			console.log('mounted')
 			// 添加事件监听，在新消息到达时滚动到底部
 			uni.$on('newMessage', this.scrollChatToBottom);
 			// 在页面加载后获取 chat 元素的引用
-			this.$nextTick(() => {
-				this.getChatElement();
-			});
+			this.$nextTick(function() {
+			                    setTimeout(()=>{
+			                        uni.createSelectorQuery().select('.messages').boundingClientRect((res)=>{
+			                            uni.pageScrollTo({
+			                                scrollTop: res.height,
+			                                duration: 200
+			                            })
+			                        }).exec()
+			                    },50)
+			                    
+			                });
 		},
 		beforeDestroy() {
+			console.log('beforeDestroy')
 			// 在组件销毁之前移除事件监听
 			uni.$off('newMessage', this.scrollChatToBottom);
 		},
+		// watch(messages, (newVal: any, oldVal: any) => {
+		//       nextTick(() => {
+		//         const newLastMessage = newVal[newVal.length - 1];
+		//         const oldLastMessage = oldVal ? oldVal[oldVal.length - 1] : {};
+		//         data.oldMessageTime = messages.value[0].time;
+		//         handleShowTime();
+		//         if (oldVal && newLastMessage.ID !== oldLastMessage.ID) {
+		// //发完消息之后的页面滚动
+		// setTimeout(() => {
+		//   data.scrollTop = 998+(newVal.length-15)*50;
+		// }, 500);
+		//           // handleScrollBottom(); // 非从conversationList 首次进入
+		//         }
+		//       });
+		//     });
 		onLoad() {
 			let self = this;
 			recorderManager.onStop(function(res) {
@@ -114,6 +145,7 @@
 				});
 			});
 			let deviceHeight = 0
+			console.log('on load')
 			// uni.getSystemInfo({
 			// 				success: function(data) {
 			// 					console.log(data.statusBarHeight)
@@ -128,14 +160,16 @@
 			getChatElement() {
 				// 获取 chat 元素的引用
 				this.chat = this.$refs.chatRef;
-				
+				console.log('get chat element')
 				// 在页面加载后等待一小段时间再获取 chat 元素的高度等信息
 				    setTimeout(() => {
 				      this.scrollChatToBottom();
-				    }, 100);
+				    }, 1000);
 			},
 			scrollChatToBottom() {
+				console.log('this.scrollTop',this.scrollTop)
 				// 确保 chat 元素的引用存在
+				console.log('this chat',this.chat)
 				if (!this.chat) {
 					this.getChatElement();
 					return;
