@@ -14,29 +14,31 @@
 			</view> -->
 
 			<!-- Chat Section -->
-			<view class="chat">
-				<!-- Chat Header -->
+			<view class="chat chat-scroll">
 				<view class="contact bar">
 					<view :class="['pic', currentContact.pic]"></view>
 					<view class="name">{{ currentContact.name }}</view>
 					<view class="seen">{{ currentContact.lastSeen }}</view>
 				</view>
+				<!-- Chat Header -->
+				<scroll-view id="scrollview" class="chat " :scroll-top="scrollTop" scroll-y="true" @scroll="scroll">
+					<!-- Chat Header -->
+					<!-- Messages Container -->
+					<view class="messages chat-room" id="chat" ref="chatRef">
+						<!-- Messages -->
+						<view v-for="(message, index) in messages" :key="index">
+							<view class="time">{{ message.time }}</view>
+							<view :class="['message', message.sender]">{{ message.content }}</view>
+						</view>
 
-				<!-- Messages Container -->
-				<view class="messages chatdoom" id="chat" ref="chatRef">
-					<!-- Messages -->
-					<view v-for="(message, index) in messages" :key="index">
-						<view class="time">{{ message.time }}</view>
-						<view :class="['message', message.sender]">{{ message.content }}</view>
+						<!-- Typing Indicator -->
+						<view class="message stark">
+							<view class="typing typing-1"></view>
+							<view class="typing typing-2"></view>
+							<view class="typing typing-3"></view>
+						</view>
 					</view>
-
-					<!-- Typing Indicator -->
-					<view class="message stark">
-						<view class="typing typing-1"></view>
-						<view class="typing typing-2"></view>
-						<view class="typing typing-3"></view>
-					</view>
-				</view>
+				</scroll-view>
 
 				<!-- Input Area -->
 				<view class="input">
@@ -57,13 +59,6 @@
 	const innerAudioContext = uni.createInnerAudioContext();
 
 	innerAudioContext.autoplay = true;
-const handleClickItem = (item: any, index: number) => {
-  //...代码
-  //实时滚动
-  setTimeout(() => {
-    scrollToBottom()
-  }, 200)
-}
 	export default {
 		data() {
 			return {
@@ -94,25 +89,40 @@ const handleClickItem = (item: any, index: number) => {
 					// ... other messages
 				],
 				newMessage: '',
+				scrollTop: 0,
+				old: {
+					scrollTop: 0
+				},
+				style: {
+					pageHeight: 0,
+					contentViewHeight: 0,
+					footViewHeight: 90,
+					mitemHeight: 0
+				},
 				// chatHeight: '94vh',
 			}
 		},
 		mounted() {
-			console.log('mounted')
-			// 添加事件监听，在新消息到达时滚动到底部
-			uni.$on('newMessage', this.scrollChatToBottom);
-			// 在页面加载后获取 chat 元素的引用
-			this.$nextTick(function() {
-			                    setTimeout(()=>{
-			                        uni.createSelectorQuery().select('.messages').boundingClientRect((res)=>{
-			                            uni.pageScrollTo({
-			                                scrollTop: res.height,
-			                                duration: 200
-			                            })
-			                        }).exec()
-			                    },50)
-			                    
-			                });
+			// console.log('mounted')
+			// // 添加事件监听，在新消息到达时滚动到底部
+			// uni.$on('newMessage', this.scrollChatToBottom);
+			// // 在页面加载后获取 chat 元素的引用
+			// this.$nextTick(function() {
+			// 	setTimeout(() => {
+			// 		uni.createSelectorQuery().select('.messages').boundingClientRect((res) => {
+			// 			uni.pageScrollTo({
+			// 				scrollTop: res.height,
+			// 				duration: 200
+			// 			})
+			// 		}).exec()
+			// 	}, 50)
+
+			// });
+			const res = uni.getSystemInfoSync(); //获取手机可使用窗口高度     api为获取系统信息同步接口
+			this.style.pageHeight = res.windowHeight;
+			this.style.contentViewHeight = res.windowHeight - uni.getSystemInfoSync().screenWidth / 750 * (100) -
+				70; //像素   因为给出的是像素高度 然后我们用的是upx  所以换算一下 
+			this.scrollToBottom(); //创建后调用回到底部方法
 		},
 		beforeDestroy() {
 			console.log('beforeDestroy')
@@ -157,19 +167,27 @@ const handleClickItem = (item: any, index: number) => {
 			//     this.chatHeight = `calc(100vh - ${deviceHeight}px)`;
 		},
 		methods: {
+			scroll: function(e) {
+				console.log('scroll')
+				this.old.scrollTop = e.detail.scrollTop
+			},
+			goTop: function(e) {
+				this.scrollTop = this.old.scrollTop
+				this.$nextTick(function() {
+					this.scrollTop = 0
+				});
+			},
 			getChatElement() {
 				// 获取 chat 元素的引用
 				this.chat = this.$refs.chatRef;
 				console.log('get chat element')
 				// 在页面加载后等待一小段时间再获取 chat 元素的高度等信息
-				    setTimeout(() => {
-				      this.scrollChatToBottom();
-				    }, 1000);
+				setTimeout(() => {
+					this.scrollChatToBottom();
+				}, 1000);
 			},
 			scrollChatToBottom() {
-				console.log('this.scrollTop',this.scrollTop)
 				// 确保 chat 元素的引用存在
-				console.log('this chat',this.chat)
 				if (!this.chat) {
 					this.getChatElement();
 					return;
@@ -218,9 +236,25 @@ const handleClickItem = (item: any, index: number) => {
 					};
 					this.messages.push(newChat);
 					this.newMessage = ''; // 清空输入框
-					this.scrollChatToBottom(); // 滚动到底部
+					this.scrollToBottom(); // 滚动到底部
 					console.log('Message sent, scrolling to bottom...');
 				}
+			},
+			scrollToBottom() {
+				let that = this;
+				console.log('that', that)
+				let query = uni.createSelectorQuery();
+				query.selectAll('.messages').boundingClientRect();
+				query.select('#scrollview').boundingClientRect();
+				query.exec((res) => {
+					that.style.mitemHeight = 0;
+					res[0].forEach((rect) => that.style.mitemHeight = that.style.mitemHeight + rect.height + 40);
+					setTimeout(() => {
+						if (that.style.mitemHeight > (that.style.contentViewHeight - 100)) {
+							that.scrollTop = that.style.mitemHeight - that.style.contentViewHeight + 60;
+						}
+					}, 100)
+				});
 			}
 		}
 	}
@@ -232,6 +266,7 @@ const handleClickItem = (item: any, index: number) => {
 		.center {
 			left: 50%;
 			transform: translateX(-50%);
+			background-color: #000000;
 		}
 
 		.contacts {
@@ -244,6 +279,9 @@ const handleClickItem = (item: any, index: number) => {
 
 		.chat {
 			width: 100%;
+		}
+		.chat-scroll{
+			background-color: #000000;
 		}
 	}
 
@@ -273,8 +311,11 @@ const handleClickItem = (item: any, index: number) => {
 		/* left: calc(50% + 12rem); */
 		/* left: calc(10% + 12rem); */
 		transform: translate(-50%, -50%);
+		background-color: #000000;
 	}
-
+	.chat-scroll{
+		background-color: #000000;
+	}
 	.pic {
 		width: 4rem;
 		height: 4rem;
@@ -368,24 +409,32 @@ const handleClickItem = (item: any, index: number) => {
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
-		height: 90vh;
+		height: 100vh;
 		width: 24rem;
 		margin: 0;
 		overflow: hidden;
 		z-index: 2;
-		background: white;
+		background: #000000;
 		border-radius: 0;
 		/* box-shadow: 0 0 8rem 0 rgba(0, 0, 0, 0.1), 0rem 2rem 4rem -3rem rgba(0, 0, 0, 0.5); */
 	}
 
 	.chat .contact.bar {
-		position: relative;
+		
+		/* position: relative; */
 		/* 修改为相对定位 */
-		flex-basis: 3.5rem;
-		flex-shrink: 0;
-		margin: 0rem;
+		/* flex-basis: 3.5rem; */
+		/* flex-shrink: 0; */
+		/* margin: 0rem; */
 		/* box-sizing: border-box; */
-		background-color: #333;
+		/* background-color: #333; */
+		position: fixed;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  z-index: 1000; /* 设置一个较大的 z-index，确保在其他元素上方 */
+		  background-color: #333; /* 你可以根据需要设置背景颜色 */
+		  color: white; /* 你可以根据需要设置文本颜色 */
 	}
 
 	.chat .messages {
@@ -464,6 +513,7 @@ const handleClickItem = (item: any, index: number) => {
 		align-items: center;
 		padding: 0 0.5rem 0 1.5rem;
 		background-color: #333;
+		color: white;
 	}
 
 	.chat .input i {
