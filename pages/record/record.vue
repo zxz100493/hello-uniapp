@@ -14,12 +14,14 @@
 			</view> -->
 
 			<!-- Chat Section -->
-			<view class="chat chat-scroll">
-				<view class="contact bar">
+			<view class="contact bar">
+				<view class="chat-header">
 					<view :class="['pic', currentContact.pic]"></view>
 					<view class="name">{{ currentContact.name }}</view>
 					<view class="seen">{{ currentContact.lastSeen }}</view>
 				</view>
+			</view>
+			<view class="chat chat-scroll">
 				<!-- Chat Header -->
 				<scroll-view id="scrollview" class="chat " :scroll-top="scrollTop" scroll-y="true" @scroll="scroll">
 					<!-- Chat Header -->
@@ -28,7 +30,9 @@
 						<!-- Messages -->
 						<view v-for="(message, index) in messages" :key="index">
 							<view class="time">{{ message.time }}</view>
-							<view :class="['message', message.sender]">{{ message.content }}</view>
+							<view :class="['message', message.sender === 'parker' ? 'parker' : 'left']">
+								{{ message.content }}
+							</view>
 						</view>
 
 						<!-- Typing Indicator -->
@@ -103,21 +107,6 @@
 			}
 		},
 		mounted() {
-			// console.log('mounted')
-			// // 添加事件监听，在新消息到达时滚动到底部
-			// uni.$on('newMessage', this.scrollChatToBottom);
-			// // 在页面加载后获取 chat 元素的引用
-			// this.$nextTick(function() {
-			// 	setTimeout(() => {
-			// 		uni.createSelectorQuery().select('.messages').boundingClientRect((res) => {
-			// 			uni.pageScrollTo({
-			// 				scrollTop: res.height,
-			// 				duration: 200
-			// 			})
-			// 		}).exec()
-			// 	}, 50)
-
-			// });
 			const res = uni.getSystemInfoSync(); //获取手机可使用窗口高度     api为获取系统信息同步接口
 			this.style.pageHeight = res.windowHeight;
 			this.style.contentViewHeight = res.windowHeight - uni.getSystemInfoSync().screenWidth / 750 * (100) -
@@ -129,21 +118,6 @@
 			// 在组件销毁之前移除事件监听
 			uni.$off('newMessage', this.scrollChatToBottom);
 		},
-		// watch(messages, (newVal: any, oldVal: any) => {
-		//       nextTick(() => {
-		//         const newLastMessage = newVal[newVal.length - 1];
-		//         const oldLastMessage = oldVal ? oldVal[oldVal.length - 1] : {};
-		//         data.oldMessageTime = messages.value[0].time;
-		//         handleShowTime();
-		//         if (oldVal && newLastMessage.ID !== oldLastMessage.ID) {
-		// //发完消息之后的页面滚动
-		// setTimeout(() => {
-		//   data.scrollTop = 998+(newVal.length-15)*50;
-		// }, 500);
-		//           // handleScrollBottom(); // 非从conversationList 首次进入
-		//         }
-		//       });
-		//     });
 		onLoad() {
 			let self = this;
 			recorderManager.onStop(function(res) {
@@ -156,15 +130,6 @@
 			});
 			let deviceHeight = 0
 			console.log('on load')
-			// uni.getSystemInfo({
-			// 				success: function(data) {
-			// 					console.log(data.statusBarHeight)
-			// 					deviceHeight = 1 //获取状态栏高度 乘2是px与rpx转换 获取到的高度单位是px　　　
-			// 				}
-			// 			})
-			// // const navBarHeight = /* 获取导航栏高度的代码 */;
-			//     // this.chatHeight = `calc(100vh - ${deviceHeight}px)`;
-			//     this.chatHeight = `calc(100vh - ${deviceHeight}px)`;
 		},
 		methods: {
 			scroll: function(e) {
@@ -225,19 +190,9 @@
 			sendMessage() {
 				console.log('message')
 				if (this.newMessage.trim() !== '') {
-					const currentTime = new Date().toLocaleTimeString([], {
-						hour: '2-digit',
-						minute: '2-digit'
-					});
-					const newChat = {
-						time: currentTime,
-						sender: 'parker',
-						content: this.newMessage
-					};
-					this.messages.push(newChat);
-					this.newMessage = ''; // 清空输入框
-					this.scrollToBottom(); // 滚动到底部
-					console.log('Message sent, scrolling to bottom...');
+
+					this.chatWithMsg(this.newMessage)
+
 				}
 			},
 			scrollToBottom() {
@@ -252,8 +207,49 @@
 					setTimeout(() => {
 						if (that.style.mitemHeight > (that.style.contentViewHeight - 100)) {
 							that.scrollTop = that.style.mitemHeight - that.style.contentViewHeight + 60;
+							console.log('scrolltop', that.scrollTop)
 						}
 					}, 100)
+				});
+			},
+			chatWithMsg(msg) {
+				const currentTime = new Date().toLocaleTimeString([], {
+					hour: '2-digit',
+					minute: '2-digit'
+				});
+
+				const newChat = {
+					time: currentTime,
+					sender: 'parker',
+					content: msg
+				};
+				this.messages.push(newChat);
+				this.newMessage = ''; // 清空输入框
+				console.log('new chat before send chat', newChat)
+				uni.request({
+					url: '/chat/test', //仅为示例，并非真实接口地址。
+					data: {
+						msg: msg
+					},
+					success: (res) => {
+						let data = res.data.data;
+						let response = JSON.parse(data);
+
+						const aiChat = {
+							time: currentTime,
+							sender: 'ai',
+							content: response.result
+						};
+						console.log('new chat after chat', newChat)
+						this.messages.push(aiChat);
+
+						this.scrollToBottom(); // 滚动到底部
+						console.log('Message sent, scrolling to bottom...');
+					},
+					fail: (res) => {
+						console.log('get失败');
+						console.log(res.data);
+					}
 				});
 			}
 		}
@@ -280,8 +276,10 @@
 		.chat {
 			width: 100%;
 		}
-		.chat-scroll{
+
+		.chat-scroll {
 			background-color: #000000;
+			/* padding-top: 3rem */
 		}
 	}
 
@@ -313,9 +311,12 @@
 		transform: translate(-50%, -50%);
 		background-color: #000000;
 	}
-	.chat-scroll{
+
+	.chat-scroll {
 		background-color: #000000;
+		/* padding-top: 3rem; */
 	}
+
 	.pic {
 		width: 4rem;
 		height: 4rem;
@@ -416,29 +417,23 @@
 		z-index: 2;
 		background: #000000;
 		border-radius: 0;
-		/* box-shadow: 0 0 8rem 0 rgba(0, 0, 0, 0.1), 0rem 2rem 4rem -3rem rgba(0, 0, 0, 0.5); */
 	}
 
-	.chat .contact.bar {
-		
-		/* position: relative; */
-		/* 修改为相对定位 */
-		/* flex-basis: 3.5rem; */
-		/* flex-shrink: 0; */
-		/* margin: 0rem; */
-		/* box-sizing: border-box; */
-		/* background-color: #333; */
-		position: fixed;
-		  top: 0;
-		  left: 0;
-		  width: 100%;
-		  z-index: 1000; /* 设置一个较大的 z-index，确保在其他元素上方 */
-		  background-color: #333; /* 你可以根据需要设置背景颜色 */
-		  color: white; /* 你可以根据需要设置文本颜色 */
+	.center .contact.bar {
+		position: absolute;
+		top: 0.1rem;
+		left: 0;
+		width: 100%;
+		z-index: 1000;
+		/* 设置一个较大的 z-index，确保在其他元素上方 */
+		background-color: #333;
+		/* 你可以根据需要设置背景颜色 */
+		color: white;
+		/* 你可以根据需要设置文本颜色 */
 	}
 
 	.chat .messages {
-		padding: 1rem;
+		padding-top: 6rem;
 		background: #000000;
 		flex-shrink: 2;
 		overflow-y: auto;
@@ -476,6 +471,16 @@
 		margin: 1rem 1rem 1rem auto;
 		border-radius: 1.125rem 1.125rem 0 1.125rem;
 		background: #333;
+		color: white;
+	}
+
+	/* New styles for left-aligned message */
+	.chat .messages .message.left {
+		margin: 1rem 1rem 1rem 0;
+		border-radius: 1.125rem 1.125rem 0 1.125rem;
+		/* background: #4285f4; */
+		background: #2a5cb0;
+		/* Set your desired background color */
 		color: white;
 	}
 

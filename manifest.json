@@ -17,6 +17,17 @@
             "delay" : 0
         },
         "modules" : {},
+		// "devServer" : {
+		// 	"port" : 8000,
+		// 	"disableHostCheck" : true,
+		// 	"proxy" : {
+		// 		"/chat" : {
+		// 			"target" : "http://172.19.145.9",
+		// 			"changeOrigin" : true,
+		// 			"secure" : false
+		// 		}
+		// 	}
+		// },
         /* 模块配置 */
         "distribute" : {
             /* 应用发布信息 */
@@ -47,6 +58,20 @@
     },
     /* SDK配置 */
     "quickapp" : {},
+	"h5" : {
+		"devServer" : {
+			"port" : 8866,
+			"disableHostCheck" : true,
+			"proxy" : {
+				"/chat" : {
+					"target" : "http://172.19.145.94:8866",
+					"changeOrigin" : true,
+					"secure" : false
+				}
+			}
+		}
+	},
+
     /* 快应用特有相关 */
     "mp-weixin" : {
         /* 小程序特有相关 */
